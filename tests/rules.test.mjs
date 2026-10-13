@@ -29,8 +29,8 @@ const seedDoc = (path, data) => env.withSecurityRulesDisabled((ctx) => setDoc(do
 const cafe = () => env.authenticatedContext('cafe1').firestore();
 const other = () => env.authenticatedContext('cafe2').firestore();
 const anon = () => env.unauthenticatedContext().firestore();
-const admin = () => env.authenticatedContext('admin', { email: 'kagankarki03@gmail.com', email_verified: true }).firestore();
-const impostor = () => env.authenticatedContext('x', { email: 'kagankarki03@gmail.com', email_verified: false }).firestore();
+const admin = () => env.authenticatedContext('admin', { email: 'merhaba@neredemac.com', email_verified: true }).firestore();
+const impostor = () => env.authenticatedContext('x', { email: 'kagankarki03@gmail.com', email_verified: true }).firestore();
 
 const bc = (cafeId = 'cafe1', matchId = 'm1') => ({ cafeId, matchId, sound: true, entryFee: null, minSpend: null, reservationRequired: false });
 const lead = (extra = {}) => ({ name: 'Moda Köşe Pub', city: 'istanbul', district: 'kadikoy', phone: '905321234567', venueId: null, createdAt: serverTimestamp(), ...extra });

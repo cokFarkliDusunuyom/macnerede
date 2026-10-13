@@ -706,15 +706,13 @@ export async function updateCafeProfile(cafeId: string, patch: CafeProfile) {
 // ---------------- yönetim (sadece firestore.rules'taki yönetici e-postası) ----------------
 const DEMO_ADMIN = 'demo-yonetici@macnerede';
 
-export async function adminSignIn(): Promise<void> {
+/** Yönetim girişi: e-posta + şifre. Yetkiyi firestore.rules verir; başka e-posta girse de panel açılmaz. */
+export async function adminSignIn(email: string, password: string): Promise<void> {
   if (demoMode) return;
-  const provider = new GoogleAuthProvider();
-  // Başka bir Google hesabıyla girilmişse Google aynı hesabı sessizce seçmesin
-  provider.setCustomParameters({ prompt: 'select_account' });
-  await signInWithPopup(firebase().auth, provider);
+  await signInWithEmailAndPassword(firebase().auth, email.trim().toLowerCase(), password);
 }
 
-/** null: Google ile girilmemiş · admin false: girilmiş ama yönetici değil */
+/** null: girilmemiş · admin false: girilmiş ama yönetici değil */
 export type AdminSession = { email: string; admin: boolean } | null;
 
 /**
@@ -729,7 +727,7 @@ export function watchAdmin(cb: (s: AdminSession) => void): () => void {
   let seq = 0;
   return onAuthStateChanged(firebase().auth, async (u) => {
     const run = ++seq;
-    const email = u && u.providerData.some((p) => p.providerId === 'google.com') ? u.email : null;
+    const email = u?.email ?? null;
     if (!email) return cb(null);
     const admin = await getDocs(query(collection(firebase().db, 'codes'), limit(1))).then(
       () => true,

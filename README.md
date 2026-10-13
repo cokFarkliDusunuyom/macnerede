@@ -68,7 +68,7 @@ Proje: `macnerede-58592`.
 
 Güvenlik kuralları (`firestore.rules`) şunları garanti eder: normal kayıt en fazla 14 günlük deneme açabilir; kodlu kayıt
 ancak kodu **aynı işlemde** kullanarak açılabilir (kod iki kez kullanılamaz); mekan kendi üyeliğine dokunamaz;
-kodları sadece yönetici (`kagankarki03@gmail.com`, Google ile) listeleyip oluşturabilir; rehberi sadece yönetici yazar;
+kodları sadece yönetici (`merhaba@neredemac.com`, e-posta ve şifreyle) listeleyip oluşturabilir; rehberi sadece yönetici yazar;
 başvurular sadece belirli alanlarla ve sunucu saatiyle oluşturulabilir.
 
 Kuralların testi (Firebase emülatörü, Java gerekir): `npm run test:rules` — 22 senaryo.

@@ -30,7 +30,6 @@ import {
   demoMode,
   listBroadcasts,
   logout,
-  prepareGoogle,
   watchAdmin,
   type AdminSession,
   type StatAction,
@@ -44,7 +43,7 @@ import { addDays, allMatches, matchPath, slugify, ymdIstanbul, type MatchInfo } 
 import { formatPhone, tl, waLink } from '@/lib/hooks';
 import { FRESH_MONTHS, MAX_MONTHS, MIN_RECENT, bundledVenues, evidenceMonth, isTrusted, trustStatus } from '@/lib/venues';
 import { downloadXlsx, type Cell } from '@/lib/xlsx';
-import { PAYMENTS_ENABLED } from '@/lib/site';
+import { CONTACT_EMAIL, PAYMENTS_ENABLED } from '@/lib/site';
 
 type Tab = 'hafta' | 'analitik' | 'mekanlar' | 'basvurular' | 'rehber' | 'yeni' | 'odemeler' | 'kodlar';
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
@@ -60,7 +59,9 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
 
 function friendly(e: unknown) {
   const code = (e as { code?: string })?.code ?? '';
-  if (code === 'auth/operation-not-allowed') return 'Google ile giriş kapalı. Firebase Console → Authentication → Sign-in method → Google’ı aç.';
+  if (code === 'auth/operation-not-allowed') return 'E-posta/şifre girişi kapalı. Firebase Console → Authentication → Sign-in method → E-posta/Şifre’yi aç.';
+  if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') return 'E-posta ya da şifre hatalı.';
+  if (code === 'auth/too-many-requests') return 'Çok fazla deneme yapıldı, biraz bekleyip tekrar dene.';
   if (code === 'auth/unauthorized-domain') return 'Bu alan adı Firebase’de yetkili değil (Authentication → Settings → Authorized domains).';
   if (code === 'auth/popup-blocked') return POPUP_BLOCKED;
   // Panel sadece yönetici doğrulanınca açılıyor: burada reddedilme çoğunlukla canlıdaki kuralların eski kalmasıdır
@@ -76,13 +77,11 @@ export default function AdminView({ matches, weekText }: { matches: MatchInfo[];
   const [tab, setTab] = useState<Tab>('hafta');
   const [cafes, setCafes] = useState<Cafe[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pass, setPass] = useState('');
+  const [signingIn, setSigningIn] = useState(false);
   const email = session?.admin ? session.email : null;
 
   useEffect(() => watchAdmin(setSession), []);
-
-  useEffect(() => {
-    if (session !== undefined && !email) prepareGoogle();
-  }, [session, email]);
 
   const loadCafes = useCallback(() => {
     adminListCafes()
@@ -101,19 +100,29 @@ export default function AdminView({ matches, weekText }: { matches: MatchInfo[];
       <motion.div className="card auth-wrap" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
         <LogoMark size={40} />
         <h1 style={{ marginTop: 14 }}>Yönetim</h1>
-        <p className="muted" style={{ margin: '6px 0 22px' }}>Mekanları, üyelikleri ve kodları yönetmek için yönetici Google hesabınla gir.</p>
+        <p className="muted" style={{ margin: '6px 0 22px' }}>Mekanları, üyelikleri ve kodları yönetmek için yönetici e-postası ve şifresiyle gir.</p>
         {session && <div className="form-error">{session.email} hesabının yönetim yetkisi yok. Yönetici hesabıyla gir.</div>}
         {error && <div className="form-error">{error}</div>}
-        <button
-          className="btn btn-primary btn-lg btn-block"
-          onClick={() =>
-            adminSignIn().catch((e) => {
-              if ((e as { code?: string })?.code !== 'auth/popup-closed-by-user') setError(friendly(e));
-            })
-          }
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            setError(null);
+            setSigningIn(true);
+            adminSignIn(CONTACT_EMAIL, pass)
+              .catch((err) => setError(friendly(err)))
+              .finally(() => setSigningIn(false));
+          }}
         >
-          <ShieldCheck size={18} /> {session ? 'Başka Google hesabıyla gir' : 'Google ile giriş yap'}
-        </button>
+          <label htmlFor="adm-mail">E-posta</label>
+          <input id="adm-mail" className="input" type="email" value={CONTACT_EMAIL} readOnly />
+          <label htmlFor="adm-pass" style={{ marginTop: 12 }}>
+            Şifre
+          </label>
+          <input id="adm-pass" className="input" type="password" autoComplete="current-password" value={pass} onChange={(e) => setPass(e.target.value)} required />
+          <button className="btn btn-primary btn-lg btn-block" style={{ marginTop: 16 }} disabled={signingIn || !pass}>
+            <ShieldCheck size={18} /> {signingIn ? 'Giriş yapılıyor…' : 'Giriş yap'}
+          </button>
+        </form>
       </motion.div>
     );
   }

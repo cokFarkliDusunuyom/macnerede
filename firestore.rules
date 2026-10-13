@@ -14,11 +14,9 @@ service cloud.firestore {
 
     function signedIn() { return request.auth != null; }
     function isOwner(cafeId) { return signedIn() && request.auth.uid == cafeId; }
-    // Yönetim sayfası: sadece bu Google hesabı
+    // Yönetim sayfası: sadece bu e-posta (Firebase Authentication'da e-posta/şifre kullanıcısı olarak açık olmalı)
     function isAdmin() {
-      return signedIn()
-        && request.auth.token.email == 'kagankarki03@gmail.com'
-        && request.auth.token.email_verified == true;
+      return signedIn() && request.auth.token.email == 'merhaba@neredemac.com';
     }
     function codePath(code) { return /databases/$(database)/documents/codes/$(code); }
 
