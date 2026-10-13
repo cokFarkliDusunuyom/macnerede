@@ -5,11 +5,11 @@ import { motion } from 'motion/react';
 import { ExternalLink, Info, MessageCircle, Navigation, Phone, Star, Trees, Tv } from 'lucide-react';
 import { KindIcon } from './bits';
 import { HookahIcon, PintIcon } from './art';
-import { directionsLink, telLink } from '@/lib/hooks';
+import { telLink } from '@/lib/hooks';
 import { claimLink } from '@/lib/site';
 import { track } from '@/lib/db';
 import { districtName } from '@/lib/places';
-import { evidenceMonth, hasWhatsApp } from '@/lib/venues';
+import { canWhatsApp, evidenceMonth, venueDirections, venueTerms } from '@/lib/venues';
 import type { Venue } from '@/lib/types';
 
 interface Props {
@@ -24,7 +24,8 @@ interface Props {
 
 /** Rehber mekanı: anlaşmalı değil, maç verdiği taraftar yorumlarından biliniyor */
 export default function VenueCard({ v, index, active, onSeat, onFocus, featured }: Props) {
-  const wa = hasWhatsApp(v.phone);
+  const wa = canWhatsApp(v);
+  const terms = venueTerms(v);
   return (
     <motion.article
       layout
@@ -82,11 +83,22 @@ export default function VenueCard({ v, index, active, onSeat, onFocus, featured 
         )}
       </div>
 
+      {terms.length > 0 && (
+        <dl className="spec-list" style={{ marginBottom: 10 }}>
+          {terms.map((t) => (
+            <div key={t.label}>
+              <dt>{t.label}</dt>
+              <dd>{t.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+
       <p className="cc-note">
         <Info size={15} style={{ flex: 'none', marginTop: 2 }} />
         <span>
-          Taraftar yorumlarına göre maç veriyor{v.evidenceDate && ` (en yeni maç yorumu ${evidenceMonth(v.evidenceDate)})`}. Anlaşmalı değil: o maçı
-          verip vermediğini, sesi ve giriş ücretini gitmeden sor.
+          Mekan aranarak teyit edildi{v.evidenceDate && ` (${evidenceMonth(v.evidenceDate)})`}. Anlaşmalı değil: hangi maçı verdiğini ve
+          yer olup olmadığını gitmeden sor.{v.note && ` ${v.note}`}
         </span>
       </p>
 
@@ -110,7 +122,7 @@ export default function VenueCard({ v, index, active, onSeat, onFocus, featured 
         <button className="btn btn-ghost" onClick={() => onFocus(v.id)}>
           Haritada
         </button>
-        <a className="btn btn-ghost" href={directionsLink(v.lat, v.lng)} onClick={() => track(v.id, 'dir')} target="_blank" rel="noopener noreferrer">
+        <a className="btn btn-ghost" href={venueDirections(v, districtName(v.city, v.district))} onClick={() => track(v.id, 'dir')} target="_blank" rel="noopener noreferrer">
           <Navigation size={15} /> Yol tarifi
         </a>
         {v.instagram && (

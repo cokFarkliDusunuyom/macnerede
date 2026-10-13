@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: `${SITE_NAME} — Maçı hangi mekanda izlersin?`, template: `%s — ${SITE_NAME}` },
-  description: 'Galatasaray, Fenerbahçe, Beşiktaş ve Trabzonspor maçlarını veren kafe ve pub’lar: Ankara, İstanbul, İzmir. Semtini seç, mekanı bul, yerini WhatsApp’tan ayırt.',
+  description: 'Galatasaray, Fenerbahçe, Beşiktaş ve Trabzonspor maçlarını veren kafe ve pub’lar: Ankara. Semtini seç, mekanı bul, yerini WhatsApp’tan ayırt.',
   applicationName: SITE_NAME,
   openGraph: { siteName: SITE_NAME, locale: 'tr_TR', type: 'website' },
 };

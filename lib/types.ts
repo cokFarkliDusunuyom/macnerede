@@ -58,6 +58,17 @@ export interface Venue {
   evidenceDate?: string | null;
   /** Son 11 ayda maç izlendiğini yazan yorum sayısı (elle sayıldıysa) */
   evidenceCount?: number | null;
+  /** Konum yalnızca semt düzeyinde (tam adres bilinmiyor): yol tarifi mekan adıyla aranır */
+  approxLocation?: boolean;
+  /** Telefonla öğrenilen şartlar (serbest metin; null = sorulmadı) */
+  fee?: string | null; // maç ücreti
+  minSpend?: string | null; // minimum harcama
+  smoking?: 'inside' | 'outside' | 'no' | null;
+  /** WhatsApp'tan rezervasyon alıyor mu (true/false; null = bilinmiyor) */
+  wpReservation?: boolean | null;
+  /** Hangi maçları verdiği, kısıtlar */
+  broadcast?: string;
+  note?: string;
   instagram?: string;
   website?: string;
   /** Google Maps bağlantısı */

@@ -11,8 +11,8 @@ import { KindIcon } from './bits';
 import { TvIllustration } from './art';
 import { ClaimLink } from './VenueCard';
 import { getVenue, track } from '@/lib/db';
-import { directionsLink, formatPhone, telLink } from '@/lib/hooks';
-import { evidenceMonth, hasWhatsApp } from '@/lib/venues';
+import { formatPhone, telLink } from '@/lib/hooks';
+import { canWhatsApp, evidenceMonth, venueDirections, venueTerms } from '@/lib/venues';
 import { cityById, districtName } from '@/lib/places';
 import { matchPath, type MatchInfo } from '@/lib/fixtures';
 import { team } from '@/lib/teams';
@@ -56,7 +56,8 @@ export default function VenueView({ id, matches }: { id: string; matches: MatchI
     );
   }
 
-  const wa = hasWhatsApp(v.phone);
+  const wa = canWhatsApp(v);
+  const terms = venueTerms(v);
   const upcoming = matches.filter((m) => !m.finished);
   const maps = v.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${v.name} ${v.address}`)}`;
 
@@ -88,8 +89,8 @@ export default function VenueView({ id, matches }: { id: string; matches: MatchI
           <p className="cc-note" style={{ marginTop: 14 }}>
             <Info size={15} style={{ flex: 'none', marginTop: 2 }} />
             <span>
-              Taraftar yorumlarına göre maç veriyor{v.evidenceDate && ` (en yeni maç yorumu ${evidenceMonth(v.evidenceDate)})`}. Anlaşmalı değil: o
-              maçı verip vermediğini, sesi ve giriş ücretini gitmeden sor.
+              Mekan aranarak teyit edildi{v.evidenceDate && ` (${evidenceMonth(v.evidenceDate)})`}. Anlaşmalı değil: hangi maçı verdiğini ve yer
+              olup olmadığını gitmeden sor.{v.note && ` ${v.note}`}
             </span>
           </p>
           <dl className="spec-list">
@@ -107,14 +108,18 @@ export default function VenueView({ id, matches }: { id: string; matches: MatchI
                 </dd>
               </div>
             )}
-            <div>
-              <dt>Ortam</dt>
-              <dd>
-                {[v.features.bigScreen && 'Dev ekran', v.features.alcohol ? 'Alkol var' : 'Alkolsüz', v.features.hookah && 'Nargile', v.features.garden && 'Açık alan']
-                  .filter(Boolean)
-                  .join(' · ')}
-              </dd>
-            </div>
+            {terms.map((t) => (
+              <div key={t.label}>
+                <dt>{t.label}</dt>
+                <dd>{t.value}</dd>
+              </div>
+            ))}
+            {[v.features.bigScreen && 'Dev ekran', v.features.alcohol && 'Alkol var', v.features.hookah && 'Nargile', v.features.garden && 'Açık alan'].some(Boolean) && (
+              <div>
+                <dt>Ortam</dt>
+                <dd>{[v.features.bigScreen && 'Dev ekran', v.features.alcohol && 'Alkol var', v.features.hookah && 'Nargile', v.features.garden && 'Açık alan'].filter(Boolean).join(' · ')}</dd>
+              </div>
+            )}
           </dl>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
             {v.phone && (
@@ -122,7 +127,7 @@ export default function VenueView({ id, matches }: { id: string; matches: MatchI
                 <Phone size={15} /> Ara
               </a>
             )}
-            <a className="btn btn-ghost" href={directionsLink(v.lat, v.lng)} onClick={() => track(v.id, 'dir')} target="_blank" rel="noopener noreferrer">
+            <a className="btn btn-ghost" href={venueDirections(v, districtName(v.city, v.district))} onClick={() => track(v.id, 'dir')} target="_blank" rel="noopener noreferrer">
               <Navigation size={15} /> Yol tarifi
             </a>
             <a className="btn btn-ghost" href={maps} target="_blank" rel="noopener noreferrer">

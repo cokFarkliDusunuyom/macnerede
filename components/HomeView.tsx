@@ -13,7 +13,7 @@ import { scenes } from '@/lib/scenes';
 import { Jersey, PitchLines, TvIllustration } from './art';
 import { matchPath, weekdayLabel, withStatus, type DayTabs, type MatchInfo } from '@/lib/fixtures';
 import { BIG4, stadiumFor, team, type BigTeam } from '@/lib/teams';
-import { cityById, locative } from '@/lib/places';
+import { cities, cityById, locative } from '@/lib/places';
 import { useCity, useListings, useNow, usePref } from '@/lib/hooks';
 
 type Day = 'hafta' | 'bugun' | 'yarin' | 'haftasonu';
@@ -106,8 +106,12 @@ export default function HomeView({ matches: initial, week, weekText, nextWeek, t
             <div className="pick-label">Takımın</div>
             <TeamPicker value={teamPick} onChange={setTeamPick} />
 
-            <div className="pick-label">Şehrin</div>
-            <CityPicker value={city} onChange={setCity} counts={loading ? undefined : cityCounts} />
+            {cities.length > 1 && (
+              <>
+                <div className="pick-label">Şehrin</div>
+                <CityPicker value={city} onChange={setCity} counts={loading ? undefined : cityCounts} />
+              </>
+            )}
 
             {next && semts.length > 0 && (
               <>

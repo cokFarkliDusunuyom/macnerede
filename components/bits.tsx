@@ -30,6 +30,8 @@ export function FanBadge({ id }: { id: BigTeam }) {
 
 /** Kayan "başparmak"lı şehir seçici */
 export function CityPicker({ value, onChange, counts }: { value: string; onChange: (id: string) => void; counts?: Record<string, number> }) {
+  // Tek şehir (pilot: Ankara) varken seçici gösterilmez
+  if (cities.length < 2) return null;
   return (
     <div className="seg" role="group" aria-label="Şehir">
       {cities.map((c) => (

@@ -1,6 +1,6 @@
 # NeredeMaç (neredemac.com)
 
-Galatasaray, Fenerbahçe, Beşiktaş ve Trabzonspor maçlarını veren kafe/pub'ları gösteren site (İstanbul, Ankara, İzmir).
+Galatasaray, Fenerbahçe, Beşiktaş ve Trabzonspor maçlarını veren kafe/pub'ları gösteren site (şimdilik yalnızca Ankara).
 Taraftar maçı ve semtini seçer, mekanı bulur, yerini WhatsApp'tan hazır mesajla ayırtır. İki tür mekan var:
 
 - **Anlaşmalı mekanlar**: kayıt olur, hangi maçı verdiğini, sesi, giriş ücretini kendisi girer; listede üstte görünür.
@@ -81,7 +81,7 @@ sabit hatlarda "Ara" gösterilir.
 
 ## Rehber mekanları
 
-`data/rehber.json` — İstanbul, Ankara ve İzmir'de semt semt mekanlar. Listeye girme şartı: Google'daki taraftar
+`data/rehber.json` — Ankara'da telefonla tek tek aranıp teyit edilen mekanlar (maç ücreti, minimum harcama, sigara, WhatsApp rezervasyonu, yayın kısıtı kayıtta). Listeye girme şartı: Google'daki taraftar
 yorumlarında maç izlendiğinin yazması (en az 2 yorum, en yenisi yakın tarihli) ve mekanın açık olması; her kaydın
 `evidence` alanında kanıt özeti var (ör. "5 yorum, en yenisi 1 ay önce"). Adres, telefon ve konum Google Haritalar'dan.
 Özellikler (alkol, nargile, açık alan, dev ekran) sadece biliniyorsa işaretli; fiyat bilgisi yok, bütçe filtresi rehber mekanlarını eler.

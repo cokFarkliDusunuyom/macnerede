@@ -7,21 +7,6 @@ import type { BigTeam } from './teams';
 type Row = [id: string, name: string, kind: CafeKind, city: string, district: string, address: string, lat: number, lng: number, cap: number, screens: string, big: boolean, alc: boolean, hookah: boolean, garden: boolean, p: [number, number], fan: BigTeam | null, plan: PlanId];
 
 const rows: Row[] = [
-  ['moda-tribun', 'Moda Tribün Pub', 'Pub', 'istanbul', 'kadikoy', 'Moda Cd. No:61, Caferağa', 40.9839, 29.0263, 110, '4 TV + projeksiyon', true, true, false, false, [350, 650], 'fb', 'pro'],
-  ['kadife-mac-evi', 'Kadife Maç Evi', 'Bar', 'istanbul', 'kadikoy', 'Kadife Sk. No:14, Caferağa', 40.9863, 29.0297, 90, '3 TV + dev perde', true, true, false, false, [300, 600], null, 'standart'],
-  ['bahariye-cay', 'Bahariye Çay Bahçesi', 'Nargile', 'istanbul', 'kadikoy', 'Bahariye Cd. No:33, Osmanağa', 40.9889, 29.0312, 140, '5 TV + 180" perde', true, false, true, true, [180, 380], null, 'standart'],
-  ['yeldegirmeni-kose', 'Yeldeğirmeni Köşe', 'Kafe', 'istanbul', 'kadikoy', 'Karakolhane Cd. No:22, Rasimpaşa', 40.9964, 29.0284, 45, '2 büyük TV', false, false, false, false, [150, 300], 'fb', 'standart'],
-  ['rihtim-sahne', 'Rıhtım Sahne', 'Bar', 'istanbul', 'kadikoy', 'Rıhtım Cd. No:8, Rasimpaşa', 40.9924, 29.0232, 160, 'Dev LED ekran + 3 TV', true, true, false, true, [400, 750], null, 'pro'],
-  ['carsi-kartal', 'Çarşı Kartal Pub', 'Pub', 'istanbul', 'besiktas', 'Mumcu Bakkal Sk. No:6, Çarşı', 41.0427, 29.0058, 120, '4 TV + perde', true, true, false, false, [350, 650], 'bjk', 'pro'],
-  ['koyici-mac-kafe', 'Köyiçi Maç Kafe', 'Kafe', 'istanbul', 'besiktas', 'Ihlamurdere Cd. No:11, Köyiçi', 41.0440, 29.0046, 60, '3 TV', false, false, false, true, [180, 320], null, 'standart'],
-  ['abbasaga-kiraathanesi', 'Abbasağa Kıraathanesi', 'Kıraathane', 'istanbul', 'besiktas', 'Yıldız Cd., Abbasağa Parkı karşısı', 41.0461, 29.0034, 50, '2 TV', false, false, false, true, [80, 180], 'bjk', 'standart'],
-  ['akaretler-tap', 'Akaretler Tap', 'Pub', 'istanbul', 'besiktas', 'Spor Cd. No:48, Akaretler', 41.0406, 29.0011, 130, 'Dev perde + 3 TV', true, true, false, false, [450, 800], null, 'standart'],
-  ['mecidiyekoy-aslan', 'Aslan Kafe Mecidiyeköy', 'Kafe', 'istanbul', 'sisli', 'Büyükdere Cd. No:92, Mecidiyeköy', 41.0668, 28.9946, 80, '4 TV + projeksiyon', true, false, true, false, [200, 380], 'gs', 'pro'],
-  ['bomonti-bira', 'Bomonti Bira Evi', 'Pub', 'istanbul', 'sisli', 'Birahane Sk. No:1, Bomonti', 41.0570, 28.9800, 100, '3 TV + perde', true, true, false, true, [350, 650], null, 'standart'],
-  ['kibris-sehitleri-pub', 'Kıbrıs Şehitleri Pub', 'Pub', 'izmir', 'alsancak', 'Kıbrıs Şehitleri Cd. No:72, Alsancak', 38.4382, 27.1441, 90, '3 TV + perde', true, true, false, false, [300, 550], null, 'standart'],
-  ['alsancak-sari-kirmizi', 'Sarı Kırmızı Nargile', 'Nargile', 'izmir', 'alsancak', '1382 Sk. No:9, Alsancak', 38.4357, 27.1408, 70, '4 TV', false, false, true, true, [200, 360], 'gs', 'standart'],
-  ['tunali-pub', 'Tunalı Pub', 'Pub', 'ankara', 'tunali', 'Tunalı Hilmi Cd. No:88, Kavaklıdere', 39.9034, 32.8604, 110, '4 TV + perde', true, true, false, false, [300, 600], null, 'pro'],
-  ['kugulu-kafe', 'Kuğulu Sarı Lacivert', 'Kafe', 'ankara', 'tunali', 'Bestekar Sk. No:31, Kavaklıdere', 39.9057, 32.8596, 45, '2 TV', false, false, false, false, [150, 300], 'fb', 'standart'],
 ];
 
 export const demoCafes: Cafe[] = rows.map((r, i) => ({
