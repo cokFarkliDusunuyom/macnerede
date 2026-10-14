@@ -33,6 +33,10 @@ export const cities: City[] = [
       { id: 'cebeci', name: 'Cebeci', center: [39.931, 32.876] },
       { id: 'cukurambar', name: 'Çukurambar', center: [39.908, 32.806] },
       { id: 'oran', name: 'Oran', center: [39.884, 32.858] },
+      { id: 'alacaatli', name: 'Alacaatlı', center: [39.855, 32.674] },
+      { id: 'incek', name: 'İncek', center: [39.831, 32.74] },
+      { id: 'baglica', name: 'Bağlıca', center: [39.906, 32.635] },
+      { id: 'etlik', name: 'Etlik / Ayvalı', center: [39.966, 32.86] },
     ],
   },
 ];

@@ -12,7 +12,7 @@ import { TvIllustration } from './art';
 import { ClaimLink } from './VenueCard';
 import { getVenue, track } from '@/lib/db';
 import { formatPhone, telLink } from '@/lib/hooks';
-import { canWhatsApp, evidenceMonth, venueDirections, venueTerms } from '@/lib/venues';
+import { canWhatsApp, evidenceMonth, venueDirections, venueTerms, callHref, callIsExternal, evidenceNote } from '@/lib/venues';
 import { cityById, districtName } from '@/lib/places';
 import { matchPath, type MatchInfo } from '@/lib/fixtures';
 import { team } from '@/lib/teams';
@@ -89,8 +89,7 @@ export default function VenueView({ id, matches }: { id: string; matches: MatchI
           <p className="cc-note" style={{ marginTop: 14 }}>
             <Info size={15} style={{ flex: 'none', marginTop: 2 }} />
             <span>
-              Mekan aranarak teyit edildi{v.evidenceDate && ` (${evidenceMonth(v.evidenceDate)})`}. Anlaşmalı değil: hangi maçı verdiğini ve yer
-              olup olmadığını gitmeden sor.{v.note && ` ${v.note}`}
+              {evidenceNote(v)}{v.note && ` ${v.note}`}
             </span>
           </p>
           <dl className="spec-list">
@@ -122,11 +121,9 @@ export default function VenueView({ id, matches }: { id: string; matches: MatchI
             )}
           </dl>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
-            {v.phone && (
-              <a className="btn btn-primary" href={telLink(v.phone)} onClick={() => track(v.id, 'call')}>
+            <a className="btn btn-primary" href={callHref(v)} {...(callIsExternal(v) ? { target: '_blank', rel: 'noopener noreferrer' } : {})} onClick={() => track(v.id, 'call')}>
                 <Phone size={15} /> Ara
               </a>
-            )}
             <a className="btn btn-ghost" href={venueDirections(v, districtName(v.city, v.district))} onClick={() => track(v.id, 'dir')} target="_blank" rel="noopener noreferrer">
               <Navigation size={15} /> Yol tarifi
             </a>
@@ -172,11 +169,9 @@ export default function VenueView({ id, matches }: { id: string; matches: MatchI
                     <MessageCircle size={15} /> Sor
                   </button>
                 ) : (
-                  v.phone && (
-                    <a className="btn btn-primary btn-sm" href={telLink(v.phone)} onClick={() => track(v.id, 'call')}>
-                      <Phone size={15} /> Ara
-                    </a>
-                  )
+                  <a className="btn btn-primary btn-sm" href={callHref(v)} {...(callIsExternal(v) ? { target: '_blank', rel: 'noopener noreferrer' } : {})} onClick={() => track(v.id, 'call')}>
+                <Phone size={15} /> Ara
+              </a>
                 )}
               </div>
             ))}

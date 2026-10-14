@@ -3,6 +3,7 @@
 // yönetici sayfasından Firebase'e yüklenince oradaki kayıtlar (gizlenenler hariç) kullanılır.
 import data from '@/data/rehber.json';
 import type { Venue } from './types';
+import { telLink } from './hooks';
 
 export const bundledVenues = data.venues as Venue[];
 export const venuesCheckedAt: string = data.checkedAt;
@@ -13,6 +14,17 @@ export const hasWhatsApp = (phone: string) => /^905\d{9}$/.test(phone);
 /** "Yerini ayırt" (WhatsApp) açılsın mı: mekan WhatsApp'tan rezervasyon alıyorsa (sabit hat dahil); bilinmiyorsa cep numarasıysa */
 export const canWhatsApp = (v: Pick<Venue, 'phone' | 'wpReservation'>) =>
   !!v.phone && (v.wpReservation === true || (v.wpReservation == null && hasWhatsApp(v.phone)));
+
+/** "Ara" her mekanda var: telefon varsa doğrudan arar, yoksa Google işletme kartını (numarasıyla) açar */
+export const callHref = (v: Pick<Venue, 'phone' | 'googleUrl' | 'name' | 'address'>) =>
+  v.phone ? telLink(v.phone) : v.googleUrl ?? `https://www.google.com/search?q=${encodeURIComponent(`${v.name} ${v.address} Ankara telefon`)}`;
+export const callIsExternal = (v: Pick<Venue, 'phone'>) => !v.phone;
+
+/** Kartlardaki bilgi notu */
+export const evidenceNote = (v: Pick<Venue, 'evidenceDate' | 'evidenceSource'>) =>
+  v.evidenceSource === 'team'
+    ? 'Bu mekan henüz aranıp teyit edilmedi. Gitmeden önce mutlaka arayıp maçı verdiklerini ve yer olup olmadığını sorun.'
+    : `Mekan aranarak teyit edildi${v.evidenceDate ? ` (${evidenceMonth(v.evidenceDate)})` : ''}. Anlaşmalı değil: yer olup olmadığını gitmeden sor.`;
 
 /** Yol tarifi: konum tam değilse (semt düzeyinde) mekan adıyla aranır, yanlış pine yönlendirmez */
 export const venueDirections = (v: Pick<Venue, 'name' | 'lat' | 'lng' | 'approxLocation' | 'city' | 'district'>, districtLabel: string) =>

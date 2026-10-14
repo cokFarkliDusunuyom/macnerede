@@ -239,21 +239,6 @@ export default function MatchView({ match, city: initialCity, initialDistrict, n
             </label>
           )}
         </div>
-        <div className="filter-row" role="group" aria-label="Filtreler">
-          {filterDefs.map((f) => (
-            <motion.button key={f.id} className="chip" aria-pressed={filters.has(f.id)} onClick={() => toggle(f.id)} whileTap={{ scale: 0.94 }}>
-              {filters.has(f.id) && <Check size={14} />}
-              {f.label}
-            </motion.button>
-          ))}
-          <div className="chip-group" role="group" aria-label="Bütçe">
-            {([1, 2, 3] as const).map((lvl) => (
-              <button key={lvl} aria-pressed={budget === lvl} onClick={() => setBudget(budget === lvl ? null : lvl)} title={['Uygun', 'Orta', 'Pahalı'][lvl - 1]}>
-                {'₺'.repeat(lvl)}
-              </button>
-            ))}
-          </div>
-        </div>
         <div className="toolbar-row toolbar-foot">
           <p className="list-count">
             {loading ? (

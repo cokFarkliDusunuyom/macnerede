@@ -9,7 +9,7 @@ import { telLink } from '@/lib/hooks';
 import { claimLink } from '@/lib/site';
 import { track } from '@/lib/db';
 import { districtName } from '@/lib/places';
-import { canWhatsApp, evidenceMonth, venueDirections, venueTerms } from '@/lib/venues';
+import { canWhatsApp, evidenceMonth, venueDirections, venueTerms, callHref, callIsExternal, evidenceNote } from '@/lib/venues';
 import type { Venue } from '@/lib/types';
 
 interface Props {
@@ -97,8 +97,7 @@ export default function VenueCard({ v, index, active, onSeat, onFocus, featured 
       <p className="cc-note">
         <Info size={15} style={{ flex: 'none', marginTop: 2 }} />
         <span>
-          Mekan aranarak teyit edildi{v.evidenceDate && ` (${evidenceMonth(v.evidenceDate)})`}. Anlaşmalı değil: hangi maçı verdiğini ve
-          yer olup olmadığını gitmeden sor.{v.note && ` ${v.note}`}
+          {evidenceNote(v)}{v.note && ` ${v.note}`}
         </span>
       </p>
 
@@ -108,11 +107,9 @@ export default function VenueCard({ v, index, active, onSeat, onFocus, featured 
             <MessageCircle size={16} /> Yerini ayırt
           </motion.button>
         ) : (
-          v.phone && (
-            <a className="btn btn-primary" href={telLink(v.phone)} onClick={() => track(v.id, 'call')}>
+          <a className="btn btn-primary" href={callHref(v)} {...(callIsExternal(v) ? { target: '_blank', rel: 'noopener noreferrer' } : {})} onClick={() => track(v.id, 'call')}>
               <Phone size={16} /> Arayıp sor
             </a>
-          )
         )}
         {wa && (
           <a className="btn btn-soft" href={telLink(v.phone)} onClick={() => track(v.id, 'call')}>

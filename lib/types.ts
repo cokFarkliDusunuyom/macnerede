@@ -68,6 +68,10 @@ export interface Venue {
   wpReservation?: boolean | null;
   /** Hangi maçları verdiği, kısıtlar */
   broadcast?: string;
+  /** Telefonu bilinmiyorsa "Ara" bu Google işletme kartını açar (numara ve arama butonu orada) */
+  googleUrl?: string;
+  /** Kanıtın kaynağı: 'call' = mekan arandı (varsayılan), 'team' = ekip bildirdi */
+  evidenceSource?: 'call' | 'team';
   note?: string;
   instagram?: string;
   website?: string;
