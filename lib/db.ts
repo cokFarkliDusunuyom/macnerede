@@ -712,6 +712,12 @@ export async function adminSignIn(email: string, password: string): Promise<void
   await signInWithEmailAndPassword(firebase().auth, email.trim().toLowerCase(), password);
 }
 
+/** Yönetici hesabı Firebase'de hiç açılmamışsa ilk kez açar (varsa auth/email-already-in-use döner) */
+export async function adminCreateAccount(email: string, password: string): Promise<void> {
+  if (demoMode) return;
+  await createUserWithEmailAndPassword(firebase().auth, email.trim().toLowerCase(), password);
+}
+
 /** null: girilmemiş · admin false: girilmiş ama yönetici değil */
 export type AdminSession = { email: string; admin: boolean } | null;
 

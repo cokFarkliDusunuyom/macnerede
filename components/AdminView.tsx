@@ -25,8 +25,10 @@ import {
   adminListVenues,
   adminSetMembership,
   adminSetVenueHidden,
+  adminCreateAccount,
   adminSignIn,
   adminUploadCodes,
+  resetPassword,
   demoMode,
   listBroadcasts,
   logout,
@@ -60,7 +62,7 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
 function friendly(e: unknown) {
   const code = (e as { code?: string })?.code ?? '';
   if (code === 'auth/operation-not-allowed') return 'E-posta/şifre girişi kapalı. Firebase Console → Authentication → Sign-in method → E-posta/Şifre’yi aç.';
-  if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') return 'E-posta ya da şifre hatalı.';
+  if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') return 'Şifre hatalı ya da bu yönetici hesabı Firebase’de hiç açılmamış. Aşağıdan “Şifremi unuttum” ya da “İlk kez: hesabı aç”ı dene.';
   if (code === 'auth/too-many-requests') return 'Çok fazla deneme yapıldı, biraz bekleyip tekrar dene.';
   if (code === 'auth/unauthorized-domain') return 'Bu alan adı Firebase’de yetkili değil (Authentication → Settings → Authorized domains).';
   if (code === 'auth/popup-blocked') return POPUP_BLOCKED;
@@ -79,6 +81,7 @@ export default function AdminView({ matches, weekText }: { matches: MatchInfo[];
   const [error, setError] = useState<string | null>(null);
   const [pass, setPass] = useState('');
   const [signingIn, setSigningIn] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const email = session?.admin ? session.email : null;
 
   useEffect(() => watchAdmin(setSession), []);
@@ -101,12 +104,27 @@ export default function AdminView({ matches, weekText }: { matches: MatchInfo[];
         <LogoMark size={40} />
         <h1 style={{ marginTop: 14 }}>Yönetim</h1>
         <p className="muted" style={{ margin: '6px 0 22px' }}>Mekanları, üyelikleri ve kodları yönetmek için yönetici e-postası ve şifresiyle gir.</p>
-        {session && <div className="form-error">{session.email} hesabının yönetim yetkisi yok. Yönetici hesabıyla gir.</div>}
+        {session && session.email.toLowerCase() !== CONTACT_EMAIL && (
+          <div className="form-error">
+            Şu an {session.email} ile girişlisin, bu hesabın yönetim yetkisi yok. Aşağıdan {CONTACT_EMAIL} şifresiyle gir ya da{' '}
+            <button type="button" onClick={() => logout()} style={{ textDecoration: 'underline', color: 'inherit', font: 'inherit', background: 'none', border: 0, padding: 0, cursor: 'pointer' }}>
+              çıkış yap
+            </button>
+            .
+          </div>
+        )}
+        {session && session.email.toLowerCase() === CONTACT_EMAIL && (
+          <div className="form-error">
+            {CONTACT_EMAIL} ile giriş yapıldı ama Firestore yönetici yetkisini tanımadı. Canlıdaki kurallar eski olabilir: firebase deploy --only firestore:rules
+          </div>
+        )}
         {error && <div className="form-error">{error}</div>}
+        {notice && <p className="trial-note">{notice}</p>}
         <form
           onSubmit={(e) => {
             e.preventDefault();
             setError(null);
+            setNotice(null);
             setSigningIn(true);
             adminSignIn(CONTACT_EMAIL, pass)
               .catch((err) => setError(friendly(err)))
@@ -123,6 +141,44 @@ export default function AdminView({ matches, weekText }: { matches: MatchInfo[];
             <ShieldCheck size={18} /> {signingIn ? 'Giriş yapılıyor…' : 'Giriş yap'}
           </button>
         </form>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            disabled={signingIn}
+            onClick={() => {
+              setError(null);
+              setNotice(null);
+              resetPassword(CONTACT_EMAIL)
+                .then(() => setNotice(`Hesap varsa ${CONTACT_EMAIL} adresine şifre sıfırlama bağlantısı gönderildi (spam klasörüne de bak).`))
+                .catch((err) => setError(friendly(err)));
+            }}
+          >
+            Şifremi unuttum
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            disabled={signingIn || pass.length < 6}
+            title="Yönetici hesabı Firebase'de hiç açılmadıysa yazdığın şifreyle açar"
+            onClick={() => {
+              setError(null);
+              setNotice(null);
+              setSigningIn(true);
+              adminCreateAccount(CONTACT_EMAIL, pass)
+                .catch((err) =>
+                  setError(
+                    (err as { code?: string })?.code === 'auth/email-already-in-use'
+                      ? `${CONTACT_EMAIL} hesabı zaten var; şifre hatalıysa “Şifremi unuttum” ile yenile.`
+                      : friendly(err),
+                  ),
+                )
+                .finally(() => setSigningIn(false));
+            }}
+          >
+            İlk kez: hesabı aç
+          </button>
+        </div>
       </motion.div>
     );
   }
