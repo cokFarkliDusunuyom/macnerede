@@ -64,3 +64,6 @@ export function distanceKm(a: [number, number], b: [number, number]) {
   const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a[0])) * Math.cos(rad(b[0])) * Math.sin(dLng / 2) ** 2;
   return 6371 * 2 * Math.asin(Math.sqrt(h));
 }
+
+/** 0.42 → "420 m", 3.27 → "3,3 km" */
+export const formatKm = (km: number) => (km < 1 ? `${Math.max(50, Math.round((km * 1000) / 50) * 50)} m` : `${km.toLocaleString('tr-TR', { maximumFractionDigits: km < 10 ? 1 : 0 })} km`);

@@ -8,7 +8,7 @@ import { HookahIcon, PintIcon } from './art';
 import { telLink } from '@/lib/hooks';
 import { claimLink } from '@/lib/site';
 import { track } from '@/lib/db';
-import { districtName } from '@/lib/places';
+import { districtName, formatKm } from '@/lib/places';
 import { canWhatsApp, evidenceMonth, venueDirections, venueTerms, callHref, callIsExternal, evidenceNote } from '@/lib/venues';
 import type { Venue } from '@/lib/types';
 
@@ -20,10 +20,12 @@ interface Props {
   onFocus: (id: string) => void;
   /** Ücretli öne çıkarma süresi içinde */
   featured?: boolean;
+  /** "Bana en yakın" açıkken ziyaretçiye uzaklık (km) */
+  distance?: number;
 }
 
 /** Rehber mekanı: anlaşmalı değil, maç verdiği taraftar yorumlarından biliniyor */
-export default function VenueCard({ v, index, active, onSeat, onFocus, featured }: Props) {
+export default function VenueCard({ v, index, active, onSeat, onFocus, featured, distance }: Props) {
   const wa = canWhatsApp(v);
   const terms = venueTerms(v);
   return (
@@ -50,7 +52,7 @@ export default function VenueCard({ v, index, active, onSeat, onFocus, featured 
             )}
           </h3>
           <p>
-            {v.kind} · {districtName(v.city, v.district)} · {v.address}
+            {distance !== undefined && <b className="dist">{formatKm(distance)} · </b>}{v.kind} · {districtName(v.city, v.district)} · {v.address}
           </p>
         </div>
       </div>

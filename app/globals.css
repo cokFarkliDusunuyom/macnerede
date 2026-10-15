@@ -288,6 +288,11 @@ p { margin: 0; }
 .select-pill.on { border-color: var(--accent); color: var(--accent); }
 .select-pill select { appearance: none; border: 0; background: none; color: inherit; font: inherit; padding: 0 2px; cursor: pointer; outline: none; max-width: 220px; }
 .select-pill select option { color: var(--text); background: var(--surface); }
+.near-btn { font: inherit; font-size: 14px; font-weight: 600; }
+.near-btn:disabled { opacity: .7; cursor: progress; }
+.near-note { margin: 8px 2px 0; font-size: 13.5px; color: var(--text-2); }
+.near-note.err { color: var(--danger, #e5484d); }
+.cafe-card .dist { color: var(--accent); font-weight: 700; }
 .select-pill:focus-within { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
 /* Filtreler tek satır, sığmazsa yana kayar (sağ kenarda solma) */
 .filter-row { display: flex; gap: 8px; align-items: center; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 2px 16px; mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 28px), transparent); }
@@ -650,7 +655,21 @@ select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csv
 .embed-map { position: relative; width: 100%; height: 100%; overflow: hidden; }
 .embed-map iframe { width: 100%; height: 100%; border: 0; display: block; pointer-events: none; }
 .embed-marker { position: absolute; transform: translate(-50%, -100%); padding: 0; border: 0; background: none; cursor: pointer; }
-.embed-actions { position: absolute; top: 12px; right: 12px; z-index: 3; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+/* Leaflet: sürüklenip yakınlaştırılabilen harita */
+.lf-box { position: absolute; inset: 0; background: var(--surface-2); font: inherit; }
+.leaflet-host .leaflet-container { font: inherit; background: var(--surface-2); }
+.lf-dark .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.6); }
+.lf-pin { background: none; border: 0; }
+.lf-pin-inner { position: absolute; left: 0; top: 0; transform: translate(-50%, calc(-100% - 7px)); cursor: pointer; }
+.lf-me { background: none; border: 0; }
+.me-dot { position: absolute; inset: 4px; border-radius: 50%; background: #2f80ed; border: 3px solid #fff; box-shadow: 0 0 0 0 rgba(47, 128, 237, .5); animation: me-pulse 2s infinite; }
+@keyframes me-pulse { 70% { box-shadow: 0 0 0 14px rgba(47, 128, 237, 0); } 100% { box-shadow: 0 0 0 0 rgba(47, 128, 237, 0); } }
+.leaflet-host .leaflet-control-zoom { border: 0; box-shadow: var(--shadow); border-radius: 12px; overflow: hidden; margin: 0 12px 22px 0; }
+.leaflet-host .leaflet-control-zoom a { width: 40px; height: 40px; line-height: 40px; font-size: 20px; background: var(--surface); color: var(--text); border-color: var(--line); }
+.leaflet-host .leaflet-control-zoom a:hover { background: var(--surface-2); }
+.leaflet-host .leaflet-control-attribution { font-size: 10px; background: color-mix(in srgb, var(--surface) 80%, transparent); color: var(--text-3); }
+.leaflet-host .leaflet-control-attribution a { color: var(--text-2); }
+.embed-actions { position: absolute; top: 12px; right: 12px; z-index: 1000; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .open-maps { display: inline-flex; gap: 6px; align-items: center; height: 34px; padding: 0 12px; border: 0; border-radius: 999px; background: var(--surface); color: var(--text); font-size: 13px; font-weight: 600; box-shadow: var(--shadow); cursor: pointer; }
 .open-maps:hover { background: var(--surface-2); }
 .marker.has-photo { width: 50px; height: 50px; }

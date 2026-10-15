@@ -7,7 +7,7 @@ import { FanBadge, KindIcon } from './bits';
 import { HookahIcon, PintIcon } from './art';
 import { directionsLink, formatPhone, telLink, tl } from '@/lib/hooks';
 import { track } from '@/lib/db';
-import { districtName } from '@/lib/places';
+import { districtName, formatKm } from '@/lib/places';
 import { hasWhatsApp } from '@/lib/venues';
 import type { Broadcast, Cafe } from '@/lib/types';
 
@@ -20,9 +20,11 @@ interface Props {
   onFocus: (cafeId: string) => void;
   /** Ücretli öne çıkarma süresi içinde */
   featured?: boolean;
+  /** "Bana en yakın" açıkken ziyaretçiye uzaklık (km) */
+  distance?: number;
 }
 
-export default function CafeCard({ cafe, b, index, active, onSeat, onFocus, featured }: Props) {
+export default function CafeCard({ cafe, b, index, active, onSeat, onFocus, featured, distance }: Props) {
   const pro = cafe.plan === 'pro' || !!featured;
   const wa = hasWhatsApp(cafe.phone);
 
@@ -56,7 +58,7 @@ export default function CafeCard({ cafe, b, index, active, onSeat, onFocus, feat
             )}
           </h3>
           <p>
-            {cafe.kind} · {districtName(cafe.city, cafe.district)} · {cafe.address}
+            {distance !== undefined && <b className="dist">{formatKm(distance)} · </b>}{cafe.kind} · {districtName(cafe.city, cafe.district)} · {cafe.address}
           </p>
         </div>
       </div>

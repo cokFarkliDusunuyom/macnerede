@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { AnimatePresence, LayoutGroup, motion } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, Check, ChevronDown, ChevronLeft, List, Map as MapIcon, MapPin, X } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, ChevronLeft, List, LocateFixed, Map as MapIcon, MapPin, X } from 'lucide-react';
 import Crest from './Crest';
 import Countdown from './Countdown';
 import CafeCard from './CafeCard';
@@ -14,7 +14,7 @@ import { CityPicker, CompBadge, StadiumBackdrop } from './bits';
 import { PitchLines, TvIllustration } from './art';
 import { bigTeamsIn, matchPath, withStatus, ymdIstanbul, type Match, type MatchInfo } from '@/lib/fixtures';
 import { useCity, useListings, useNow } from '@/lib/hooks';
-import { cityById, locative } from '@/lib/places';
+import { cityById, distanceKm, formatKm, locative } from '@/lib/places';
 import { SITE_NAME } from '@/lib/site';
 import { matchStatId, track } from '@/lib/db';
 import { stadiumFor, team, type BigTeam } from '@/lib/teams';
@@ -51,6 +51,33 @@ export default function MatchView({ match, city: initialCity, initialDistrict, n
   const [active, setActive] = useState<string | null>(null);
   const [view, setView] = useState<'list' | 'map'>('list');
   const [seating, setSeating] = useState<string | null>(null);
+  // "Bana en yakın": konum sadece bu sayfada, tarayıcıda kullanılır; hiçbir yere gönderilmez
+  const [me, setMe] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locError, setLocError] = useState<string | null>(null);
+
+  function toggleNear() {
+    setLocError(null);
+    if (me) return setMe(null);
+    if (!navigator.geolocation) return setLocError('Tarayıcın konum paylaşmayı desteklemiyor.');
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocating(false);
+        setMe({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setActive(null);
+      },
+      (err) => {
+        setLocating(false);
+        setLocError(
+          err.code === err.PERMISSION_DENIED
+            ? 'Konum izni verilmedi. Tarayıcının adres çubuğundaki konum simgesinden izin verip tekrar dene.'
+            : 'Konumun alınamadı, biraz sonra tekrar dene.',
+        );
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 120000 },
+    );
+  }
 
   // Şehir adresin parçası: sayfayı yeniden yüklemeden adresi de değiştir (paylaşılan bağlantı doğru şehri açsın)
   const setCity = (c: string) => {
@@ -96,8 +123,10 @@ export default function MatchView({ match, city: initialCity, initialDistrict, n
 
   const partnerOnlyActive = PARTNER_ONLY.some((f) => filters.has(f)) || [...filters].some((f) => f.startsWith('fan-')) || budget !== null;
 
+  const distOf = useMemo(() => new Map(me ? all.map((r) => [r.id, distanceKm([me.lat, me.lng], [place(r).lat, place(r).lng])]) : []), [me, all]);
+
   const rows = useMemo(() => {
-    return inCity
+    const list = inCity
       .filter((r) => {
         const p = place(r);
         if (district !== 'all' && p.district !== district) return false;
@@ -114,6 +143,8 @@ export default function MatchView({ match, city: initialCity, initialDistrict, n
         return true;
       })
       .sort((x, y) => {
+        // Konum açıksa sadece yakınlık
+        if (me) return distOf.get(x.id)! - distOf.get(y.id)!;
         // Öne çıkarılan (ücretli) mekanlar en üstte, kartta "Öne çıkan" yazar
         const fx = isFeatured(place(x), today);
         const fy = isFeatured(place(y), today);
@@ -127,7 +158,8 @@ export default function MatchView({ match, city: initialCity, initialDistrict, n
         }
         return ((y as { v: Venue }).v.reviews ?? 0) - ((x as { v: Venue }).v.reviews ?? 0);
       });
-  }, [inCity, district, filters, budget, fanTeams, partnerOnlyActive, today]);
+    return list;
+  }, [inCity, district, filters, budget, fanTeams, partnerOnlyActive, today, me, distOf]);
 
   const partnerCount = rows.filter((r) => r.type === 'cafe').length;
 
@@ -238,7 +270,17 @@ export default function MatchView({ match, city: initialCity, initialDistrict, n
               <ChevronDown size={15} />
             </label>
           )}
+          <button type="button" className={`select-pill near-btn${me ? ' on' : ''}`} onClick={toggleNear} disabled={locating} aria-pressed={!!me}>
+            <LocateFixed size={15} /> {locating ? 'Konum alınıyor…' : 'Bana en yakın'}
+            {me && <X size={14} aria-label="Kapat" />}
+          </button>
         </div>
+        {locError && <p className="near-note err">{locError}</p>}
+        {me && !loading && rows.length > 0 && distOf.get(rows[0].id)! > 30 && (
+          <p className="near-note">
+            Sana en yakın mekan {formatKm(distOf.get(rows[0].id)!)} uzakta. Şu an {cityInfo.name} dışındaysan başka şehirleri yakında ekleyeceğiz.
+          </p>
+        )}
         <div className="toolbar-row toolbar-foot">
           <p className="list-count">
             {loading ? (
@@ -295,9 +337,9 @@ export default function MatchView({ match, city: initialCity, initialDistrict, n
             <AnimatePresence mode="popLayout">
               {rows.map((r, i) =>
                 r.type === 'cafe' ? (
-                  <CafeCard key={r.id} cafe={r.c} b={r.b} index={i} active={active === r.id} onSeat={setSeating} onFocus={focus} featured={isFeatured(r.c, today)} />
+                  <CafeCard key={r.id} cafe={r.c} b={r.b} index={i} active={active === r.id} onSeat={setSeating} onFocus={focus} featured={isFeatured(r.c, today)} distance={distOf.get(r.id)} />
                 ) : (
-                  <VenueCard key={r.id} v={r.v} index={i} active={active === r.id} onSeat={setSeating} onFocus={focus} featured={isFeatured(r.v, today)} />
+                  <VenueCard key={r.id} v={r.v} index={i} active={active === r.id} onSeat={setSeating} onFocus={focus} featured={isFeatured(r.v, today)} distance={distOf.get(r.id)} />
                 ),
               )}
             </AnimatePresence>
@@ -313,6 +355,7 @@ export default function MatchView({ match, city: initialCity, initialDistrict, n
                 : { id: r.id, name: p.name, lat: p.lat, lng: p.lng, kind: p.kind, pro: false, fanOf: null, guide: true };
             })}
             activeId={active}
+            me={me}
             onSelect={(id) => {
               setView('list');
               focus(id);

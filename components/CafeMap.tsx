@@ -1,9 +1,9 @@
 'use client';
 
 import { APIProvider, AdvancedMarker, Map, useMap } from '@vis.gl/react-google-maps';
-import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useRef, useState } from 'react';
-import { ExternalLink, Map as MapIcon } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { motion } from 'motion/react';
+import { useEffect } from 'react';
 import Crest from './Crest';
 import { KindIcon } from './bits';
 import type { CafeKind } from '@/lib/types';
@@ -27,17 +27,22 @@ export interface MapCafe {
   guide?: boolean;
 }
 
-interface Props {
+export interface MapProps {
   cafes: MapCafe[];
   activeId?: string | null;
   onSelect?: (id: string) => void;
   center: [number, number];
   zoom?: number;
+  /** Ziyaretçinin konumu ("Bana en yakın" açıkken) */
+  me?: { lat: number; lng: number } | null;
 }
 
-export default function CafeMap(props: Props) {
+// API anahtarı yokken: sürüklenip yakınlaştırılabilen OpenStreetMap haritası (Leaflet tarayıcıda çalışır)
+const LeafletMap = dynamic(() => import('./LeafletMap'), { ssr: false, loading: () => <div className="skeleton" style={{ width: '100%', height: '100%' }} /> });
+
+export default function CafeMap(props: MapProps) {
   const theme = useTheme();
-  if (!mapsEnabled) return <EmbedMap {...props} />;
+  if (!mapsEnabled) return <LeafletMap {...props} />;
   const { cafes, activeId, onSelect, center, zoom = 13 } = props;
   return (
     <APIProvider apiKey={KEY} language="tr" region="TR">
@@ -93,7 +98,7 @@ function FitBounds({ cafes, activeId }: { cafes: MapCafe[]; activeId: string | n
 }
 
 /** Mekan işaretçisi: kapak fotoğrafı varsa o, yoksa taraftar arması ya da mekan türü ikonu */
-function CafePin({ c, active, delay = 0 }: { c: MapCafe; active: boolean; delay?: number }) {
+export function CafePin({ c, active, delay = 0 }: { c: MapCafe; active: boolean; delay?: number }) {
   return (
     <motion.div
       className={`marker${c.pro ? ' pro' : ''}${c.guide ? ' guide' : ''}${active ? ' active' : ''}${c.cover ? ' has-photo' : ''}`}
@@ -111,98 +116,5 @@ function CafePin({ c, active, delay = 0 }: { c: MapCafe; active: boolean; delay?
       )}
       {active && <span className="marker-label">{c.name}</span>}
     </motion.div>
-  );
-}
-
-// Web Mercator: Google haritasında yakınlaştırma z'de dünya 256·2^z piksel genişliğinde
-const TILE = 256;
-const toX = (lng: number) => (lng + 180) / 360;
-const toY = (lat: number) => {
-  const s = Math.sin((lat * Math.PI) / 180);
-  return 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI);
-};
-const toLng = (x: number) => x * 360 - 180;
-const toLat = (y: number) => (Math.atan(Math.sinh(Math.PI * (1 - 2 * y))) * 180) / Math.PI;
-
-/**
- * API anahtarı yokken: Google Maps gömülü görünümü (iğnesiz) + üstüne kendi işaretçilerimiz.
- * Gömülü harita verilen merkez ve yakınlaştırmayla açıldığı için her mekanın ekrandaki yeri hesaplanabiliyor;
- * kaydırınca işaretçiler kaymasın diye harita etkileşimsiz, "Google Maps'te aç" ile açılır.
- */
-function EmbedMap({ cafes, activeId, onSelect, center, zoom = 13 }: Props) {
-  const box = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState<{ w: number; h: number } | null>(null);
-  // Bir mekan seçiliyken "Tüm mekanlar" ile genel görünüme dönülebilir
-  const [overview, setOverview] = useState(false);
-  useEffect(() => setOverview(false), [activeId]);
-
-  useEffect(() => {
-    const el = box.current;
-    if (!el) return;
-    // Mobilde liste görünümündeyken harita gizli (0×0): o sırada gömülü haritayı hiç yükleme
-    const ro = new ResizeObserver(([e]) => {
-      const w = Math.round(e.contentRect.width);
-      const h = Math.round(e.contentRect.height);
-      setSize(w > 0 && h > 0 ? { w, h } : null);
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  const active = overview ? null : cafes.find((x) => x.id === activeId) ?? null;
-  // Görünüm: seçili mekan, yoksa bütün mekanları kapsayan en yakın tam sayı yakınlaştırma
-  let view = { x: toX(center[1]), y: toY(center[0]), z: zoom };
-  if (active) view = { x: toX(active.lng), y: toY(active.lat), z: 16 };
-  else if (cafes.length > 0 && size) {
-    const xs = cafes.map((c) => toX(c.lng));
-    const ys = cafes.map((c) => toY(c.lat));
-    const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
-    let z = 16;
-    while (z > 4 && ((x1 - x0) * TILE * 2 ** z > size.w - 80 || (y1 - y0) * TILE * 2 ** z > size.h - 110)) z--;
-    // İğneler yukarı doğru uzandığı için alanı biraz aşağı kaydır
-    view = { x: (x0 + x1) / 2, y: (y0 + y1) / 2 - 15 / (TILE * 2 ** z), z };
-  }
-  const lat = toLat(view.y).toFixed(6);
-  const lng = toLng(view.x).toFixed(6);
-  const src = `https://maps.google.com/maps?ll=${lat},${lng}&z=${view.z}&hl=tr&t=m&output=embed`;
-  const scale = TILE * 2 ** view.z;
-
-  return (
-    <div className="embed-map" ref={box}>
-      {size && (
-        <AnimatePresence mode="wait">
-          <motion.iframe key={src} title="Google Haritalar" src={src} loading="lazy" tabIndex={-1} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} />
-        </AnimatePresence>
-      )}
-      {size &&
-        cafes.map((c, i) => {
-          const left = (toX(c.lng) - view.x) * scale + size.w / 2;
-          const top = (toY(c.lat) - view.y) * scale + size.h / 2;
-          if (left < -30 || left > size.w + 30 || top < -10 || top > size.h + 60) return null;
-          return (
-            <button
-              key={c.id}
-              type="button"
-              className="embed-marker"
-              style={{ left, top, zIndex: c.id === activeId ? 2 : 1 }}
-              onClick={() => onSelect?.(c.id)}
-              aria-label={c.name}
-              title={c.name}
-            >
-              <CafePin c={c} active={c.id === activeId} delay={Math.min(i, 12) * 0.03} />
-            </button>
-          );
-        })}
-      <div className="embed-actions">
-        {active && cafes.length > 1 && (
-          <button type="button" className="open-maps" onClick={() => setOverview(true)}>
-            <MapIcon size={14} /> Tüm mekanlar
-          </button>
-        )}
-        <a className="open-maps" href={`https://www.google.com/maps/search/?api=1&query=${active ? `${active.lat},${active.lng}` : `${lat},${lng}`}`} target="_blank" rel="noopener noreferrer">
-          <ExternalLink size={14} /> Google Maps’te aç
-        </a>
-      </div>
-    </div>
   );
 }
