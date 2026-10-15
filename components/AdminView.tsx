@@ -1111,7 +1111,19 @@ const matchLabel = (id: string) => {
   const m = allMatches.find((x) => x.id === id);
   return m ? `${team(m.home).name} – ${team(m.away).name}` : id;
 };
-const statTotal = (s: Record<StatAction, number>) => STAT_COLS.reduce((n, c) => n + s[c.id], 0);
+/**
+ * Rehberden çıkarılmış mekanın eski tıklamaları: ad artık veride yok, id'den okunur hale getir.
+ * "ank-osmanli-cafe-balgat" → "Osmanli Cafe" · Ankara / Balgat
+ */
+function removedVenue(id: string) {
+  const parts = id.split('-');
+  const city = cities.find((c) => c.id.startsWith(parts[0]) && parts.length > 1);
+  const district = city?.districts.find((d) => d.id === parts[parts.length - 1]);
+  const words = parts.slice(city ? 1 : 0, district ? -1 : undefined);
+  const name = words.map((w) => w.charAt(0).toLocaleUpperCase('tr-TR') + w.slice(1)).join(' ') || id;
+  return { name, type: 'Rehberden çıkarıldı', city: city?.id ?? '', district: district?.id ?? '', phone: '' };
+}
+const statTotal =(s: Record<StatAction, number>) => STAT_COLS.reduce((n, c) => n + s[c.id], 0);
 
 /** Taraftarın mekanlar için yaptığı işlemler (anonim, günlük sayaç) + Excel dökümü */
 function StatsTab({ cafes }: { cafes: Cafe[] | null }) {
@@ -1143,7 +1155,7 @@ function StatsTab({ cafes }: { cafes: Cafe[] | null }) {
     for (const c of cafes ?? []) m.set(c.id, { name: c.name, type: c.plan === 'pro' ? 'Anlaşmalı (Pro)' : 'Anlaşmalı', city: c.city, district: c.district, phone: c.phone });
     return m;
   }, [cafes, fbVenues]);
-  const describe = (id: string) => info.get(id) ?? { name: `(bilinmeyen mekan) ${id}`, type: '?', city: '', district: '', phone: '' };
+  const describe = (id: string) => info.get(id) ?? removedVenue(id);
 
   // Site geneli kayıtlar (tekil ziyaretçi, maç sayfaları) mekan tablosuna karışmasın
   const site = useMemo(() => (days ?? []).filter((d) => d.venueId === SITE_STAT_ID).sort((a, b) => b.date.localeCompare(a.date)), [days]);
@@ -1262,7 +1274,7 @@ function StatsTab({ cafes }: { cafes: Cafe[] | null }) {
                       <b>{v.name}</b>
                       <div className="faint" style={{ fontSize: 12.5 }}>
                         {v.type}
-                        {v.city && ` · ${cityById(v.city)?.name} / ${districtName(v.city, v.district)}`}
+                        {v.city && ` · ${cityById(v.city)?.name}${v.district ? ` / ${districtName(v.city, v.district)}` : ''}`}
                       </div>
                     </td>
                     {STAT_COLS.map((c) => (
